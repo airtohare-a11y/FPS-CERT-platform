@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MECHgg Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #050608;
+  --bg-2:    #0a0d12;
+  --bg-3:    #0d1117;
+  --bg-4:    #111620;
+  --border:  #1a2030;
+  --border-hi:#2a3545;
+  --accent:  #f0a500;
+  --red:     #ef4444;
+  --green:   #22c55e;
+  --blue:    #3b82f6;
+  --purple:  #8b5cf6;
+  --text-1:  #f1f5f9;
+  --text-2:  #94a3b8;
+  --text-3:  #475569;
+  --display: 'Teko', sans-serif;
+  --ui:      'Rajdhani', sans-serif;
+  --mono:    'Share Tech Mono', monospace;
+  --r:       4px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text-1); font-family: var(--ui); font-size: 14px; min-height: 100vh; }
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: var(--bg-2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+.main { margin-left: 220px; flex: 1; padding: 2rem; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar-logo { padding: 1.5rem 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-logo .logo-text { font-family: var(--display); font-size: 1.4rem; letter-spacing: 0.1em; color: var(--text-1); }
+.sidebar-logo .logo-text span { color: var(--accent); }
+.sidebar-logo .admin-badge { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; margin-top: 0.2rem; }
+.nav-section { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+.nav-label { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--text-3); text-transform: uppercase; padding: 0 1.25rem 0.5rem; }
+.nav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 1.25rem; cursor: pointer; color: var(--text-2); font-size: 0.875rem; font-weight: 500; transition: all 0.15s; border-left: 2px solid transparent; }
+.nav-item:hover { color: var(--text-1); background: var(--bg-3); }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(240,165,0,0.05); }
+.nav-item .icon { font-size: 1rem; width: 18px; text-align: center; }
+.sidebar-footer { margin-top: auto; padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+.logout-btn { width: 100%; padding: 0.5rem; background: transparent; border: 1px solid var(--border); border-radius: var(--r); color: var(--text-2); cursor: pointer; font-family: var(--ui); font-size: 0.8rem; letter-spacing: 0.05em; }
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* Login screen */
+.login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+.login-card { width: 360px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; }
+.login-logo { font-family: var(--display); font-size: 2rem; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+.login-logo span { color: var(--accent); }
+
+/* Panels & Cards */
+.panel { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem; }
+.page-header { margin-bottom: 1.5rem; }
+.page-title { font-family: var(--display); font-size: 2rem; color: var(--text-1); line-height: 1; }
+.page-sub { color: var(--text-2); font-size: 0.875rem; margin-top: 0.25rem; }
+
+/* Stats grid */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem 1.25rem; }
+.stat-value { font-family: var(--display); font-size: 2rem; color: var(--accent); line-height: 1; }
+.stat-label { font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; margin-top: 0.25rem; }
+.stat-sub { font-size: 0.8rem; color: var(--text-2); margin-top: 0.3rem; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 0.7rem; letter-spacing: 0.1em; color: var(--text-3); text-transform: uppercase; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); font-weight: 600; }
+td { padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border); color: var(--text-2); font-size: 0.875rem; }
+tr:hover td { background: var(--bg-3); }
+tr:last-child td { border-bottom: none; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.badge-green { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.badge-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.badge-blue { background: rgba(59,130,246,0.1); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+.badge-amber { background: rgba(240,165,0,0.1); color: var(--accent); border: 1px solid rgba(240,165,0,0.2); }
+.badge-ghost { background: var(--bg-4); color: var(--text-3); border: 1px solid var(--border); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: var(--r); font-family: var(--ui); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; border: none; transition: all 0.15s; text-transform: uppercase; }
+.btn-primary { background: var(--accent); color: #050608; }
+.btn-primary:hover { background: #e09400; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+.btn-outline:hover { border-color: var(--border-hi); color: var(--text-1); }
+.btn-danger { background: transparent; border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+.btn-danger:hover { background: rgba(239,68,68,0.1); }
+.btn-sm { padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+.btn-icon { padding: 0.3rem 0.5rem; }
+
+/* Forms */
+.form-group { margin-bottom: 1rem; }
+label { display: block; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; margin-bottom: 0.4rem; }
+input, select, textarea { width: 100%; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r); padding: 0.6rem 0.75rem; color: var(--text-1); font-family: var(--ui); font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select option { background: var(--bg-3); }
+textarea { resize: vertical; min-height: 80px; }
+
+/* Sections */
+.section { display: none; }
+.section.active { display: block; }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+
+/* Alert */
+.alert { padding: 0.75rem 1rem; border-radius: var(--r); font-size: 0.875rem; margin-bottom: 1rem; }
+.alert-success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: var(--green); }
+.alert-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: var(--red); }
+.alert-info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); color: var(--blue); }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg-2); border: 1px solid var(--border-hi); border-radius: 8px; padding: 1.5rem; width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-family: var(--display); font-size: 1.4rem; margin-bottom: 1rem; }
+.modal-footer { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+/* Toast */
+.toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: 0.5rem; }
+.toast { padding: 0.75rem 1.25rem; border-radius: var(--r); font-size: 0.875rem; min-width: 250px; animation: slideIn 0.2s ease; border: 1px solid; }
+.toast-success { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+.toast-error { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: var(--red); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty { text-align: center; padding: 3rem; color: var(--text-3); }
+.mono { font-family: var(--mono); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Login Screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">MECH<span>.GG</span></div>
+    <div style="font-size:0.75rem;letter-spacing:0.15em;color:var(--text-3);text-transform:uppercase;margin-bottom:1.5rem">Admin Panel</div>
+    <div id="loginError"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="admin">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">SIGN IN</button>
+  </div>
+</div>
+
+<!-- Admin App -->
+<div class="layout" id="adminApp" style="display:none">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">MECH<span>.GG</span></div>
+      <div class="admin-badge">Admin Panel</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+        <span class="icon">📊</span> Dashboard
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Users</div>
+      <div class="nav-item" onclick="showSection('users')" id="nav-users">
+        <span class="icon">👥</span> Users
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Competitions</div>
+      <div class="nav-item" onclick="showSection('competitions')" id="nav-competitions">
+        <span class="icon">🏆</span> Competitions
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Monetisation</div>
+      <div class="nav-item" onclick="showSection('ads')" id="nav-ads">
+        <span class="icon">📢</span> Ad Slots
+      </div>
+      <div class="nav-item" onclick="showSection('sponsors')" id="nav-sponsors">
+        <span class="icon">💰</span> Sponsors
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="showSection('logs')" id="nav-logs">
+        <span class="icon">📋</span> Audit Logs
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="font-size:0.75rem;color:var(--text-3);margin-bottom:0.5rem" id="adminName">—</div>
+      <button class="logout-btn" onclick="doLogout()">SIGN OUT</button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+
+    <!-- ── Dashboard ── -->
+    <div class="section active" id="section-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Platform overview</div>
+      </div>
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card"><div class="spinner"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div style="font-size:0.7rem;letter-spacing:0.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:1rem">Recent Users</div>
+          <div id="recentUsers"><div class="spinner"></div></div>
+        </div>
+        <div class="panel">
+          <div style="font-size:0.7rem;letter-spacing:0.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:1rem">Active Competitions</div>
+          <div id="activeComps"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Users ── -->
+    <div class="section" id="section-users">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="page-title">Users</div>
+          <div class="page-sub">Manage player accounts</div>
+        </div>
+        <input type="text" placeholder="Search username..." style="width:220px" oninput="filterUsers(this.value)" id="userSearch">
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Username</th><th>Email</th><th>Tier</th><th>Uploads</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="usersTable"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Competitions ── -->
+    <div class="section" id="section-competitions">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="page-title">Competitions</div>
+          <div class="page-sub">Manage monthly genre competitions</div>
+        </div>
+        <div style="display:flex;gap:0.75rem">
+          <button class="btn btn-outline" onclick="createAllGenres()">＋ All Genres</button>
+          <button class="btn btn-primary" onclick="openModal('createComp')">＋ Create</button>
+        </div>
+      </div>
+      <div id="compsList"><div class="spinner"></div></div>
+    </div>
+
+    <!-- ── Ad Slots ── -->
+    <div class="section" id="section-ads">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="page-title">Ad Slots</div>
+          <div class="page-sub">Manage advertisement placements</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('createAd')">＋ Place Ad</button>
+      </div>
+      <div class="grid-3" style="margin-bottom:1.5rem" id="adSlotRates"></div>
+      <div class="panel">
+        <div style="font-size:0.7rem;letter-spacing:0.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:1rem">Active Ads</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Slot</th><th>Company</th><th>Link</th><th>Expires</th><th>Actions</th></tr></thead>
+            <tbody id="adsTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Sponsors ── -->
+    <div class="section" id="section-sponsors">
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="page-title">Sponsors</div>
+          <div class="page-sub">Competition sponsors and prize pools</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('createSponsor')">＋ Add Sponsor</button>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Link</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody id="sponsorsTable"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Logs ── -->
+    <div class="section" id="section-logs">
+      <div class="page-header">
+        <div class="page-title">Audit Logs</div>
+        <div class="page-sub">All admin actions</div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Detail</th></tr></thead>
+            <tbody id="logsTable"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ── Modals ── -->
+
+<!-- Create Competition -->
+<div class="modal-overlay" id="modal-createComp">
+  <div class="modal">
+    <div class="modal-title">Create Competition</div>
+    <div class="form-group">
+      <label>Genre</label>
+      <select id="compGenre">
+        <option value="fps">🎯 FPS / Shooter</option>
+        <option value="racing">🏎️ Racing</option>
+        <option value="sports">⚽ Sports</option>
+        <option value="strategy">⚔️ Strategy / MOBA</option>
+        <option value="fighting">👊 Fighting</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Title (optional — auto-generated if blank)</label>
+      <input type="text" id="compTitle" placeholder="e.g. FPS Championship — March 2026">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('createComp')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCreateComp()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Ad -->
+<div class="modal-overlay" id="modal-createAd">
+  <div class="modal">
+    <div class="modal-title">Place Ad</div>
+    <div class="form-group">
+      <label>Slot</label>
+      <select id="adSlot">
+        <option value="landing_top">Landing Page — Top Banner ($299/mo)</option>
+        <option value="landing_sidebar">Landing Page — Sidebar ($149/mo)</option>
+        <option value="between_content_1">Between Content 1 ($199/mo)</option>
+        <option value="between_content_2">Between Content 2 ($149/mo)</option>
+        <option value="dashboard_sidebar">Dashboard Sidebar ($249/mo)</option>
+        <option value="analysis_sidebar">Analysis Result Sidebar ($199/mo)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Company Name</label>
+      <input type="text" id="adCompany" placeholder="Acme Gaming">
+    </div>
+    <div class="form-group">
+      <label>Click URL</label>
+      <input type="text" id="adLink" placeholder="https://example.com">
+    </div>
+    <div class="form-group">
+      <label>Logo URL (optional)</label>
+      <input type="text" id="adLogo" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label>Banner Image URL (optional — overrides logo)</label>
+      <input type="text" id="adImage" placeholder="https://...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('createAd')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCreateAd()">Place Ad</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Sponsor -->
+<div class="modal-overlay" id="modal-createSponsor">
+  <div class="modal">
+    <div class="modal-title">Add Sponsor</div>
+    <div class="form-group">
+      <label>Sponsor Name</label>
+      <input type="text" id="sponsorName" placeholder="Acme Corp">
+    </div>
+    <div class="form-group">
+      <label>Website URL</label>
+      <input type="text" id="sponsorLink" placeholder="https://example.com">
+    </div>
+    <div class="form-group">
+      <label>Logo URL (optional)</label>
+      <input type="text" id="sponsorLogo" placeholder="https://...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('createSponsor')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCreateSponsor()">Add Sponsor</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Actions Modal -->
+<div class="modal-overlay" id="modal-userActions">
+  <div class="modal">
+    <div class="modal-title" id="userModalTitle">User Actions</div>
+    <div id="userModalContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('userActions')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Close Competition Modal -->
+<div class="modal-overlay" id="modal-closeComp">
+  <div class="modal">
+    <div class="modal-title">Close Competition</div>
+    <p style="color:var(--text-2);margin-bottom:1rem;font-size:0.875rem">This will declare the current leader as the winner. This cannot be undone.</p>
+    <div class="form-group">
+      <label>Admin Notes (optional)</label>
+      <textarea id="closeCompNotes" placeholder="Any notes about this competition close..."></textarea>
+    </div>
+    <input type="hidden" id="closeCompId">
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('closeComp')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitCloseComp()">Close Competition</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let adminToken = localStorage.getItem('adminToken') || null;
+let allUsers = [];
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {}) },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.detail || 'Request failed');
+  return data;
+}
+const GET  = p => api('GET', p);
+const POST = (p, b) => api('POST', p, b);
+const DEL  = p => api('DELETE', p);
+const PATCH = (p, b) => api('PATCH', p, b);
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const user = document.getElementById('loginUser').value;
+  const pass = document.getElementById('loginPass').value;
+  document.getElementById('loginError').innerHTML = '';
+  try {
+    const data = await POST('/admin/login', { username: user, password: pass });
+    adminToken = data.access_token;
+    localStorage.setItem('adminToken', adminToken);
+    showApp();
+  } catch(e) {
+    document.getElementById('loginError').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+  }
+}
+
+function doLogout() {
+  adminToken = null;
+  localStorage.removeItem('adminToken');
+  document.getElementById('adminApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+async function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'flex';
+  try {
+    const me = await GET('/admin/me');
+    document.getElementById('adminName').textContent = me.username || 'Admin';
+  } catch(e) { doLogout(); return; }
+  loadDashboard();
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  const loaders = { users: loadUsers, competitions: loadCompetitions, ads: loadAds, sponsors: loadSponsors, logs: loadLogs };
+  if (loaders[name]) loaders[name]();
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [stats, comps, users] = await Promise.all([
+      GET('/admin/stats'),
+      GET('/competitions/'),
+      GET('/admin/users?limit=5'),
+    ]);
+
+    const s = stats;
+    document.getElementById('dashStats').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${s.total_users||0}</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card"><div class="stat-value">${s.total_sessions||0}</div><div class="stat-label">Sessions Analysed</div></div>
+      <div class="stat-card"><div class="stat-value">${s.ranked_users||0}</div><div class="stat-label">Ranked Players</div></div>
+      <div class="stat-card"><div class="stat-value">${s.pro_users||0}</div><div class="stat-label">Pro Subscribers</div></div>
+      <div class="stat-card"><div class="stat-value">${s.total_coaches||0}</div><div class="stat-label">Active Coaches</div></div>
+      <div class="stat-card"><div class="stat-value">S${s.current_season||1}</div><div class="stat-label">Current Season</div></div>
+    `;
+
+    document.getElementById('recentUsers').innerHTML = (users.users||[]).slice(0,5).map(u => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:600;color:var(--text-1)">${u.username}</div>
+          <div style="font-size:0.75rem;color:var(--text-3)">${u.email||'—'}</div>
+        </div>
+        <span class="badge ${u.tier==='pro'?'badge-amber':'badge-ghost'}">${u.tier||'free'}</span>
+      </div>
+    `).join('') || '<div class="empty">No users</div>';
+
+    const activeComps = (comps.competitions||[]).filter(c => c.status === 'active');
+    document.getElementById('activeComps').innerHTML = activeComps.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:600;color:var(--text-1)">${c.title}</div>
+          <div style="font-size:0.75rem;color:var(--text-3)">${c.entry_count||0} entries · ${c.days_to_deadline||0}d to deadline</div>
+        </div>
+        <span style="font-family:var(--mono);color:var(--accent)">$${(c.prize_pool||0).toLocaleString()}</span>
+      </div>
+    `).join('') || '<div class="empty" style="padding:1rem;font-size:0.875rem">No active competitions<br><button class="btn btn-outline btn-sm" style="margin-top:0.75rem" onclick="showSection(\'competitions\')">Create one →</button></div>';
+
+  } catch(e) { toast('Failed to load dashboard: ' + e.message, 'error'); }
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    const data = await GET('/admin/users?limit=200');
+    allUsers = data.users || [];
+    renderUsers(allUsers);
+  } catch(e) { toast('Failed to load users: ' + e.message, 'error'); }
+}
+
+function filterUsers(q) {
+  const filtered = allUsers.filter(u =>
+    u.username.toLowerCase().includes(q.toLowerCase()) ||
+    (u.email||'').toLowerCase().includes(q.toLowerCase())
+  );
+  renderUsers(filtered);
+}
+
+function renderUsers(users) {
+  document.getElementById('usersTable').innerHTML = users.length ? users.map(u => `
+    <tr>
+      <td><strong style="color:var(--text-1)">${u.username}</strong></td>
+      <td style="color:var(--text-3)">${u.email||'—'}</td>
+      <td><span class="badge ${u.tier==='pro'?'badge-amber':'badge-ghost'}">${u.tier||'free'}</span></td>
+      <td class="mono">${u.total_uploads||0}</td>
+      <td style="color:var(--text-3)">${u.created_at ? new Date(u.created_at*1000).toLocaleDateString() : '—'}</td>
+      <td>
+        <div style="display:flex;gap:0.4rem">
+          <button class="btn btn-outline btn-sm" onclick="openUserModal(${u.id}, '${u.username}', '${u.tier||'free'}')">Manage</button>
+          ${u.suspended ? `<button class="btn btn-outline btn-sm" onclick="unsuspendUser(${u.id})">Unsuspend</button>` : `<button class="btn btn-danger btn-sm" onclick="suspendUser(${u.id})">Suspend</button>`}
+        </div>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="6" class="empty">No users found</td></tr>';
+}
+
+function openUserModal(id, username, tier) {
+  document.getElementById('userModalTitle').textContent = username;
+  document.getElementById('userModalContent').innerHTML = `
+    <div class="form-group">
+      <label>Change Tier</label>
+      <div style="display:flex;gap:0.5rem">
+        <select id="newTier" style="flex:1">
+          <option value="free" ${tier==='free'?'selected':''}>Free</option>
+          <option value="pro" ${tier==='pro'?'selected':''}>Pro</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="setTier(${id})">Set</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Reset Uploads</label>
+      <button class="btn btn-outline btn-sm" onclick="resetUploads(${id}, '${username}')">Reset Upload Count to 0</button>
+    </div>
+    <div class="form-group">
+      <label>Reset OSI History</label>
+      <button class="btn btn-danger btn-sm" onclick="resetOSI(${id}, '${username}')">⚠ Delete All Sessions</button>
+    </div>
+  `;
+  openModal('userActions');
+}
+
+async function setTier(id) {
+  const tier = document.getElementById('newTier').value;
+  try {
+    await POST(`/admin/users/${id}/tier`, { tier });
+    toast(`Tier updated to ${tier}`);
+    closeModal('userActions');
+    loadUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function suspendUser(id) {
+  if (!confirm('Suspend this user?')) return;
+  try {
+    await POST(`/admin/users/${id}/suspend`, { suspended: true });
+    toast('User suspended');
+    loadUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function resetUploads(id, username) {
+  if (!confirm(`Reset upload count for ${username}?`)) return;
+  try {
+    await POST(`/admin/users/${id}/tier`, { tier: undefined, reset_uploads: true });
+    toast('Upload count reset');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function resetOSI(id, username) {
+  if (!confirm(`DELETE ALL SESSIONS for ${username}? This cannot be undone.`)) return;
+  try {
+    await DEL(`/admin/users/${id}/osi`);
+    toast('Sessions deleted');
+    closeModal('userActions');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Competitions ──────────────────────────────────────────────────────────────
+async function loadCompetitions() {
+  try {
+    const [active, history] = await Promise.all([
+      GET('/competitions/'),
+      GET('/competitions/history'),
+    ]);
+    const all = [...(active.competitions||[]), ...(history.competitions||[])];
+    renderCompetitions(all);
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+function renderCompetitions(comps) {
+  const statusBadge = s => s === 'active' ? 'badge-green' : s === 'entries_closed' ? 'badge-blue' : s === 'closed' ? 'badge-amber' : 'badge-ghost';
+  document.getElementById('compsList').innerHTML = comps.length ? `
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Genre</th><th>Prize Pool</th><th>Entries</th><th>Status</th><th>Deadline</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${comps.map(c => `
+              <tr>
+                <td><strong style="color:var(--text-1)">${c.title}</strong></td>
+                <td><span class="badge badge-ghost">${c.genre}</span></td>
+                <td class="mono" style="color:var(--accent)">$${(c.prize_pool||0).toLocaleString()}</td>
+                <td class="mono">${c.entry_count||0}</td>
+                <td><span class="badge ${statusBadge(c.status)}">${c.status}</span></td>
+                <td style="color:var(--text-3)">${c.days_to_deadline||0}d</td>
+                <td>
+                  <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+                    ${c.status === 'active' ? `
+                      <button class="btn btn-outline btn-sm" onclick="closeEntries(${c.id})">Close Entries</button>
+                      <button class="btn btn-danger btn-sm" onclick="openCloseComp(${c.id})">Close</button>
+                    ` : ''}
+                    ${c.status === 'entries_closed' ? `
+                      <button class="btn btn-danger btn-sm" onclick="openCloseComp(${c.id})">Declare Winner</button>
+                    ` : ''}
+                    ${c.status === 'closed' ? `
+                      <button class="btn btn-outline btn-sm" onclick="archiveComp(${c.id})">Archive</button>
+                    ` : ''}
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  ` : '<div class="panel"><div class="empty">No competitions yet. Create one to get started.</div></div>';
+}
+
+async function createAllGenres() {
+  try {
+    const data = await POST('/competitions/admin/create-all-genres');
+    toast(`Created: ${data.created.join(', ')||'none'} | Skipped: ${data.skipped.join(', ')||'none'}`);
+    loadCompetitions();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function submitCreateComp() {
+  const genre = document.getElementById('compGenre').value;
+  const title = document.getElementById('compTitle').value;
+  try {
+    await POST('/competitions/admin/create', { genre, title: title||undefined });
+    toast('Competition created');
+    closeModal('createComp');
+    loadCompetitions();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function closeEntries(id) {
+  try {
+    await POST(`/competitions/admin/${id}/close-entries`);
+    toast('Entries closed — review period active');
+    loadCompetitions();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function openCloseComp(id) {
+  document.getElementById('closeCompId').value = id;
+  openModal('closeComp');
+}
+
+async function submitCloseComp() {
+  const id = document.getElementById('closeCompId').value;
+  const notes = document.getElementById('closeCompNotes').value;
+  try {
+    const data = await POST(`/competitions/admin/${id}/close`, { notes });
+    toast(`Closed. Winner: ${data.winner||'none'}`);
+    closeModal('closeComp');
+    loadCompetitions();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function archiveComp(id) {
+  try {
+    await POST(`/competitions/admin/${id}/archive`);
+    toast('Archived');
+    loadCompetitions();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Ads ───────────────────────────────────────────────────────────────────────
+async function loadAds() {
+  try {
+    const [slots, ads] = await Promise.all([
+      GET('/ads/slots'),
+      GET('/ads/admin/all'),
+    ]);
+
+    document.getElementById('adSlotRates').innerHTML = (slots.slots||[]).map(s => `
+      <div class="stat-card">
+        <div style="font-size:0.7rem;letter-spacing:0.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:0.4rem">${s.label}</div>
+        <div class="stat-value" style="font-size:1.5rem">$${s.rate_per_month}</div>
+        <div class="stat-label">per month</div>
+      </div>
+    `).join('');
+
+    const activeAds = (ads.ads||[]).filter(a => a.active);
+    document.getElementById('adsTable').innerHTML = activeAds.length ? activeAds.map(a => `
+      <tr>
+        <td><span class="badge badge-ghost">${a.slot_name}</span></td>
+        <td><strong style="color:var(--text-1)">${a.company_name}</strong></td>
+        <td><a href="${a.link_url||'#'}" target="_blank" style="color:var(--accent);font-size:0.8rem">${a.link_url||'—'}</a></td>
+        <td style="color:var(--text-3)">${a.ends_at ? new Date(a.ends_at*1000).toLocaleDateString() : 'No expiry'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="removeAd(${a.id})">Remove</button></td>
+      </tr>
+    `).join('') : '<tr><td colspan="5" class="empty">No active ads</td></tr>';
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function submitCreateAd() {
+  try {
+    await POST('/ads/admin/create', {
+      slot_name:    document.getElementById('adSlot').value,
+      company_name: document.getElementById('adCompany').value,
+      link_url:     document.getElementById('adLink').value || undefined,
+      logo_url:     document.getElementById('adLogo').value || undefined,
+      image_url:    document.getElementById('adImage').value || undefined,
+    });
+    toast('Ad placed and live');
+    closeModal('createAd');
+    loadAds();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function removeAd(id) {
+  if (!confirm('Remove this ad?')) return;
+  try {
+    await DEL(`/ads/admin/${id}`);
+    toast('Ad removed');
+    loadAds();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Sponsors ──────────────────────────────────────────────────────────────────
+async function loadSponsors() {
+  try {
+    const data = await GET('/admin/sponsors');
+    document.getElementById('sponsorsTable').innerHTML = (data.sponsors||[]).length ? data.sponsors.map(s => `
+      <tr>
+        <td><strong style="color:var(--text-1)">${s.name}</strong></td>
+        <td><a href="${s.link_url||'#'}" target="_blank" style="color:var(--accent);font-size:0.8rem">${s.link_url||'—'}</a></td>
+        <td><span class="badge ${s.active?'badge-green':'badge-ghost'}">${s.active?'Active':'Inactive'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="toggleSponsor(${s.id}, ${s.active})">${s.active?'Deactivate':'Activate'}</button>
+        </td>
+      </tr>
+    `).join('') : '<tr><td colspan="4" class="empty">No sponsors yet</td></tr>';
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function submitCreateSponsor() {
+  try {
+    await POST('/admin/sponsors', {
+      name:     document.getElementById('sponsorName').value,
+      link_url: document.getElementById('sponsorLink').value || undefined,
+      logo_url: document.getElementById('sponsorLogo').value || undefined,
+    });
+    toast('Sponsor added');
+    closeModal('createSponsor');
+    loadSponsors();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleSponsor(id, active) {
+  try {
+    await PATCH(`/admin/sponsors/${id}/toggle`, { active: !active });
+    toast(active ? 'Sponsor deactivated' : 'Sponsor activated');
+    loadSponsors();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+async function loadLogs() {
+  try {
+    const data = await GET('/admin/logs?limit=100');
+    document.getElementById('logsTable').innerHTML = (data.logs||[]).length ? data.logs.map(l => `
+      <tr>
+        <td style="color:var(--text-3);white-space:nowrap">${l.created_at ? new Date(l.created_at*1000).toLocaleString() : '—'}</td>
+        <td style="color:var(--accent)">${l.admin_username||l.admin_id||'—'}</td>
+        <td><span class="badge badge-ghost">${l.action||'—'}</span></td>
+        <td style="color:var(--text-3);font-size:0.8rem">${l.detail||'—'}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="4" class="empty">No logs</td></tr>';
+  } catch(e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+if (adminToken) {
+  showApp();
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
