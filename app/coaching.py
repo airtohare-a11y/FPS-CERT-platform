@@ -934,7 +934,7 @@ def get_coaching_plan(
     from app.models import GAME_REGISTRY
     _gcounts = {}
     for s in sessions:
-        g = getattr(s, "game_id", None) or "other"
+        g = getattr(s, "map_slug", None) or "other"
         _gcounts[g] = _gcounts.get(g, 0) + 1
     _dominant = max(_gcounts, key=_gcounts.get) if _gcounts else "other"
     _game_data = GAME_REGISTRY.get(_dominant, {})
@@ -987,11 +987,13 @@ def get_coaching_plan(
     # Group by habit key and count occurrences across sessions.
     habit_frequency: dict = {}   # key → {"count": int, "severity": str, "name": str}
     for s in sessions:
-        session_habits = getattr(s, "habits_json", None) or []
-        if isinstance(session_habits, str):
-            import json as _json
+        import json as _json
+        _aj = getattr(s, "analysis_json", None)
+        session_habits = []
+        if _aj:
             try:
-                session_habits = _json.loads(session_habits)
+                _parsed = _json.loads(_aj)
+                session_habits = _parsed.get("habits", [])
             except Exception:
                 session_habits = []
         for h in session_habits:

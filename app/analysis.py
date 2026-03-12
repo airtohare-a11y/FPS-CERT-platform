@@ -19,9 +19,30 @@
 # =============================================================================
 
 import os
+import json
 import math
 import random
 import hashlib
+
+def _hash_file(path: str) -> str:
+    """SHA-256 hash of file contents — used to detect duplicate uploads."""
+    h = hashlib.sha256()
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(65536), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+def _check_duplicate(db, user_id: int, file_hash: str):
+    """Raise 409 if this user has already submitted this exact clip."""
+    from sqlalchemy import text
+    existing = db.execute(
+        text("SELECT id FROM derived_sessions WHERE user_id=:u AND file_hash=:h LIMIT 1"),
+        {"u": user_id, "h": file_hash}
+    ).fetchone()
+    if existing:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=409, detail="You have already submitted this clip. Upload a different session.")
+
 from typing import Optional
 from datetime import datetime, timezone
 
@@ -425,7 +446,7 @@ def analyze_clip(video_path: str, game_id: str) -> dict:
     Uses file size + path hash as seed for consistent results per clip.
     Raw video is deleted after analysis — only metrics are kept.
     """
-    game_info = GAME_REGISTRY.get(game_id, GAME_REGISTRY["other"])
+    game_info = GAME_REGISTRY.get(game_id, {"name": game_id, "category": "fps", "style": "tactical", "emoji": "🎯"})
     try:
         file_size = os.path.getsize(video_path)
         # Create seed from file size + first 8KB hash for uniqueness
@@ -480,8 +501,9 @@ async def upload_clip(
     user:    User       = Depends(get_current_user),
 ):
     # ── Validate game ──────────────────────────────────────────────────────
-    if game_id not in GAME_REGISTRY:
-        raise HTTPException(status_code=400, detail="Invalid game ID")
+    _APPROVED = {"fps","racing","sports","strategy","fighting"}
+    if game_id not in GAME_REGISTRY or GAME_REGISTRY[game_id].get("category") not in _APPROVED:
+        raise HTTPException(status_code=400, detail="This game is not on the approved list for analysis.")
 
     # ── Validate file type ─────────────────────────────────────────────────
     ext = os.path.splitext(clip.filename or "")[1].lower()
@@ -524,8 +546,12 @@ async def upload_clip(
                     )
                 f.write(chunk)
 
-        # ── Run analysis ───────────────────────────────────────────────────
-        result = analyze_clip(tmp_path, game_id)
+        # ── Duplicate check ──
+        # ── Duplicate check ──
+        _file_hash = _hash_file(tmp_path)
+        _check_duplicate(db, user.id, _file_hash)
+
+        # ── Run analysis ──────────────────────────────────────────────
 
         # ── Compute OSI and percentile ─────────────────────────────────────
         osi        = _compute_osi(result["mechanicalIndex"])
@@ -893,13 +919,28 @@ def get_analysis(
     if not session:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
+    stored = json.loads(session.analysis_json) if session.analysis_json else {}
+    game_cat = stored.get("gameCategory", session.game_mode or "fps")
+    labels = {
+        "fps":      {"reaction":"Target Acquisition","accuracy":"Spray Control","eng_eff":"Tracking","consistency":"Consistency","cqe":"Close Quarters","lre":"Long Range","dpi":"Crosshair Placement"},
+        "racing":   {"reaction":"Hazard Reaction","accuracy":"Apex Precision","eng_eff":"Throttle Control","consistency":"Lap Consistency","cqe":"Braking","lre":"Oversteer Recovery","dpi":"Overall Control"},
+        "fighting": {"reaction":"Punish Timing","accuracy":"Input Precision","eng_eff":"Combo Completion","consistency":"Consistency","cqe":"Defense Reading","lre":"Adaptability","dpi":"Execution"},
+        "sports":   {"reaction":"Decision Speed","accuracy":"Execution Acc.","eng_eff":"Positioning","consistency":"Consistency","cqe":"Close Control","lre":"Long Range Play","dpi":"Overall"},
+        "strategy": {"reaction":"APM","accuracy":"Resource Eff.","eng_eff":"Map Control","consistency":"Consistency","cqe":"Engagement Timing","lre":"Adaptability","dpi":"Overall"},
+    }.get(game_cat, {"reaction":"Reaction","accuracy":"Accuracy","eng_eff":"Engagement","consistency":"Consistency","cqe":"Close Quarters","lre":"Long Range","dpi":"Pressure"})
     return {
-        "id":           session.id,
-        "osi":          session.osi_session,
-        "game":         session.map_slug,
-        "category":     session.game_mode,
-        "is_ranked":    session.is_ranked,
-        "analyzed_at":  session.submitted_at,
+        "id":              session.id,
+        "osi":             session.osi_session,
+        "game":            session.map_slug,
+        "category":        game_cat,
+        "is_ranked":       session.is_ranked,
+        "analyzed_at":     session.submitted_at,
+        "game_name":       stored.get("gameName", session.map_slug or ""),
+        "mechanical_index":stored.get("mechanicalIndex"),
+        "dimension_scores":stored.get("dimensionScores", {}),
+        "habits":          stored.get("habits", []),
+        "coaching_summary":stored.get("coachingSummary", ""),
+        "metric_labels":   labels,
         "metrics": {
             "reaction":    session.m_reaction,
             "accuracy":    session.m_accuracy,

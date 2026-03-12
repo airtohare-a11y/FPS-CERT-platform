@@ -183,6 +183,7 @@ class DerivedSession(Base):
 
     # Per-session OSI (0–1000). Computed once at upload, stored permanently.
     osi_session   = Column(Float, nullable=True)
+    analysis_json = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="sessions")
 
@@ -650,6 +651,42 @@ class LegalDisclaimer(Base):
 # Game Registry — supported games for video analysis
 # =============================================================================
 
+
+
+class CoachUpvote(Base):
+    """
+    Pro/Coach users can upvote a coach once.
+    Drives coach listing sort order.
+    """
+    __tablename__ = "coach_upvotes"
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    coach_id   = Column(Integer, ForeignKey("coach_profiles.id", ondelete="CASCADE"),
+                        nullable=False, index=True)
+    voter_id   = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),
+                        nullable=False, index=True)
+    created_at = Column(Integer, nullable=False, default=_now)
+
+    __table_args__ = (UniqueConstraint("coach_id", "voter_id", name="uq_coach_upvote"),)
+
+    voter = relationship("User", foreign_keys=[voter_id])
+
+
+class CoachAgreementLog(Base):
+    """
+    Immutable record of coach agreement acceptance.
+    """
+    __tablename__ = "coach_agreement_log"
+
+    id          = Column(Integer, primary_key=True, autoincrement=True)
+    user_id     = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),
+                         nullable=False, index=True)
+    version     = Column(String(10), nullable=False, default="1.0")
+    accepted_at = Column(Integer,    nullable=False, default=_now)
+    ip_address  = Column(String(45), nullable=True)
+
+    user = relationship("User", foreign_keys=[user_id])
+
 GAME_REGISTRY = {
     "valorant":       {"name":"Valorant",          "category":"fps",      "style":"tactical",     "emoji":"🎯"},
     "csgo":           {"name":"CS2",                "category":"fps",      "style":"tactical",     "emoji":"💣"},
@@ -677,16 +714,30 @@ GAME_REGISTRY = {
     "sf6":            {"name":"Street Fighter 6",   "category":"fighting", "style":"traditional",  "emoji":"👊"},
     "tekken8":        {"name":"Tekken 8",           "category":"fighting", "style":"traditional",  "emoji":"🥊"},
     "mortalkombat":   {"name":"Mortal Kombat",      "category":"fighting", "style":"traditional",  "emoji":"💀"},
+
+    "codbo6":         {"name":"Call of Duty: Black Ops 6",  "category":"fps",      "style":"tactical",     "emoji":"🔫"},
+    "codwarzone":     {"name":"Call of Duty: Warzone",      "category":"fps",      "style":"battleroyale", "emoji":"💀"},
+    "pubg":           {"name":"PUBG: Battlegrounds",        "category":"fps",      "style":"battleroyale", "emoji":"🪖"},
+    "freefire":       {"name":"Free Fire",                  "category":"fps",      "style":"battleroyale", "emoji":"🔥"},
+    "halo":           {"name":"Halo Infinite",              "category":"fps",      "style":"arena",        "emoji":"⚔️"},
+    "bgmi":           {"name":"Battlegrounds Mobile India", "category":"fps",      "style":"battleroyale", "emoji":"📱"},
+    "pubgmobile":     {"name":"PUBG Mobile",                "category":"fps",      "style":"battleroyale", "emoji":"📱"},
+    "honorofkings":   {"name":"Honor of Kings",             "category":"strategy", "style":"moba",         "emoji":"👑"},
+    "mobilelegends":  {"name":"Mobile Legends: Bang Bang",  "category":"strategy", "style":"moba",         "emoji":"⚡"},
+    "wildrift":       {"name":"League of Legends: Wild Rift","category":"strategy","style":"moba",         "emoji":"🔮"},
+    "arenaofvalor":   {"name":"Arena of Valor",             "category":"strategy", "style":"moba",         "emoji":"🏆"},
+    "guiltygear":     {"name":"Guilty Gear Strive",         "category":"fighting", "style":"traditional",  "emoji":"⚡"},
+    "dbfz":           {"name":"Dragon Ball FighterZ",       "category":"fighting", "style":"traditional",  "emoji":"🐉"},
+    "kof15":          {"name":"King of Fighters XV",        "category":"fighting", "style":"traditional",  "emoji":"🥋"},
+    "rocketleague":   {"name":"Rocket League",              "category":"sports",   "style":"vehiclesports","emoji":"🚀"},
+    "easportsfc":     {"name":"EA Sports FC",               "category":"sports",   "style":"football",     "emoji":"⚽"},
+    "iracing":        {"name":"iRacing",                    "category":"racing",   "style":"sim",          "emoji":"🏁"},
+    "trackmania":     {"name":"TrackMania",                 "category":"racing",   "style":"arcade",       "emoji":"🎌"},
+    "brawlstars":     {"name":"Brawl Stars",                "category":"strategy", "style":"mobilemoba",   "emoji":"⭐"},
+    "clashroyale":    {"name":"Clash Royale",               "category":"strategy", "style":"mobilemoba",   "emoji":"👑"},
+    "pokemonunite":   {"name":"Pokemon Unite",              "category":"strategy", "style":"moba",         "emoji":"🎮"},
     "smashbros":      {"name":"Super Smash Bros",   "category":"fighting", "style":"platform",     "emoji":"🎮"},
-    # ── Casual / Unsupported ─────────────────────────────────────────────────
-    # These games score but do NOT qualify for ranked competition or leaderboard
-    "other":          {"name":"Other Supported Game",  "category":"other",    "style":"casual",      "emoji":"🎮", "ranked": False},
-    "roblox":         {"name":"Roblox",                "category":"other",    "style":"casual",      "emoji":"🧱", "ranked": False},
-    "minecraft":      {"name":"Minecraft",             "category":"other",    "style":"casual",      "emoji":"⛏️", "ranked": False},
-    "fishingplanet":  {"name":"Fishing Planet",        "category":"other",    "style":"casual",      "emoji":"🎣", "ranked": False},
-    "thehunter":      {"name":"theHunter: Call of the Wild", "category":"other", "style":"casual",   "emoji":"🦌", "ranked": False},
-    "stardewvalley":  {"name":"Stardew Valley",        "category":"other",    "style":"casual",      "emoji":"🌾", "ranked": False},
-    "thesims":        {"name":"The Sims",              "category":"other",    "style":"casual",      "emoji":"🏠", "ranked": False},
+
 }
 
 # Games that qualify for ranked play and competition

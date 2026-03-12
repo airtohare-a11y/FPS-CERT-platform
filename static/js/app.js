@@ -184,67 +184,166 @@ function pctBar(val, color) {
 function renderLanding() {
   if (isAuthed()) { navigate('/dashboard', true); return; }
   setView(`
-    <div class="hero">
+    <div class="hero" style="min-height:92vh;display:flex;align-items:center;position:relative;overflow:hidden">
       <div class="hero-grid"></div>
-      <div class="hero-content fade-in">
-        <div class="hero-eyebrow">FPS Skill Certification Platform</div>
-        <h1 class="hero-title">KNOW YOUR<br><span>ACTUAL RANK.</span></h1>
-        <p class="hero-sub">Upload a gameplay clip. Our engine automatically extracts your mechanics, assigns a certified OSI score, and tells you exactly what to fix.</p>
-        <div class="hero-ctas">
-          <button class="btn btn-primary btn-lg" onclick="navigate('/register')">Get Certified Free</button>
-          
+      <div class="hero-content fade-in" style="max-width:860px;margin:0 auto;padding:6rem 1.5rem;text-align:center">
+        <div class="hero-eyebrow" style="font-size:0.78rem;letter-spacing:0.18em;margin-bottom:1.5rem">
+          GAMEPLAY ANALYSIS &nbsp;·&nbsp; SKILL CERTIFICATION &nbsp;·&nbsp; ELITE COACHING
         </div>
-        <div class="hero-stats">
-          <div><div class="hero-stat-num">7</div><div class="hero-stat-label">Metrics Tracked</div></div>
-          <div><div class="hero-stat-num">28</div><div class="hero-stat-label">Supported Games</div></div>
-          <div><div class="hero-stat-num">9</div><div class="hero-stat-label">Rank Tiers</div></div>
-          <div><div class="hero-stat-num">5</div><div class="hero-stat-label">Sessions to Rank</div></div>
+        <h1 class="hero-title" style="font-size:clamp(2.8rem,7vw,5.5rem);line-height:1.05;margin-bottom:1.5rem">
+          PLAY BETTER.<br><span>RANKED BY DATA.</span>
+        </h1>
+        <p class="hero-sub" style="font-size:clamp(1rem,2vw,1.25rem);max-width:620px;margin:0 auto 2.5rem;color:var(--text-2);line-height:1.7">
+          Upload a gameplay clip and get an instant mechanical breakdown — reaction speed, accuracy, tracking, decision-making, and more. Know exactly what to fix. Find a coach who can help you fix it.
+        </p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3.5rem">
+          <button class="btn btn-primary btn-lg" onclick="navigate('/register')" style="font-size:1rem;padding:0.85rem 2.2rem">Analyze My Gameplay Free</button>
+          <button class="btn btn-outline btn-lg" onclick="navigate('/coaches')" style="font-size:1rem;padding:0.85rem 2.2rem">Find a Coach</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;max-width:640px;margin:0 auto">
+          <div><div class="hero-stat-num" style="font-size:2.2rem">48</div><div class="hero-stat-label">Games Supported</div></div>
+          <div><div class="hero-stat-num" style="font-size:2.2rem">9</div><div class="hero-stat-label">Rank Tiers</div></div>
+          <div><div class="hero-stat-num" style="font-size:2.2rem">10</div><div class="hero-stat-label">Skill Dimensions</div></div>
+          <div><div class="hero-stat-num" style="font-size:2.2rem">0</div><div class="hero-stat-label">Clips Stored</div></div>
         </div>
       </div>
     </div>
 
-    <section style="background:var(--bg-2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:4rem 1.5rem;">
-      <div style="max-width:960px;margin:0 auto;">
-        <div class="label label-accent" style="margin-bottom:1.5rem;display:block">How It Works</div>
+    <section style="padding:5rem 1.5rem;background:var(--bg-2);border-top:1px solid var(--border)">
+      <div style="max-width:960px;margin:0 auto">
+        <div style="text-align:center;margin-bottom:3rem">
+          <div class="label label-accent" style="margin-bottom:0.75rem;display:block">For Players</div>
+          <h2 style="font-family:var(--display);font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:1rem">Stop Guessing. Start Knowing.</h2>
+          <p style="color:var(--text-2);max-width:560px;margin:0 auto;line-height:1.7">Most players grind for years without knowing what actually holds them back. MECHgg tells you in minutes.</p>
+        </div>
         <div class="feature-grid">
           <div class="feature-cell">
             <div class="feature-icon">🎬</div>
-            <div class="feature-title">Upload Your Clip</div>
-            <div class="feature-desc">Drop any gameplay video — MP4, MOV, MKV. Up to 500MB. Clip plays while we analyze it, then gets permanently deleted.</div>
+            <div class="feature-title">Upload From Any Platform</div>
+            <div class="feature-desc">PC, Xbox, PlayStation, mobile, or paste a URL. Your clip is analyzed then permanently deleted — we keep the data, never the footage.</div>
           </div>
           <div class="feature-cell">
             <div class="feature-icon">⚙️</div>
-            <div class="feature-title">Automatic Analysis</div>
-            <div class="feature-desc">No manual input. Our engine extracts 7 normalized mechanical metrics and computes your OSI score from 0–1000.</div>
+            <div class="feature-title">10-Dimension Breakdown</div>
+            <div class="feature-desc">Target acquisition, spray control, tracking, crosshair placement, close-quarters, long-range, engagement decisions, consistency and more — across FPS, MOBA, Fighting, Racing, Sports, and Mobile titles.</div>
           </div>
           <div class="feature-cell">
             <div class="feature-icon">🎯</div>
-            <div class="feature-title">Get Certified</div>
-            <div class="feature-desc">After 5 sessions you receive an official rank and a suggested in-game role based on your mechanical patterns.</div>
+            <div class="feature-title">OSI Score 0-1000</div>
+            <div class="feature-desc">Your Objective Skill Index ranks you against every player on the platform. See exactly where you stand — not just in your lobby, but globally.</div>
           </div>
           <div class="feature-cell">
             <div class="feature-icon">🏋️</div>
-            <div class="feature-title">Improve With Drills</div>
-            <div class="feature-desc">Personalised drill plans targeting your specific weak points. Not generic tips — drills matched to your exact habits.</div>
+            <div class="feature-title">Personalised Drill Plans</div>
+            <div class="feature-desc">Not generic tips. Drills built from your exact weak points — specific exercises targeting the habits pulling your rank down.</div>
           </div>
           <div class="feature-cell">
-            <div class="feature-icon">👥</div>
-            <div class="feature-title">Book a Coach</div>
-            <div class="feature-desc">Connect with Diamond+ ranked coaches who specialise in your role. Browse, book, and message directly on platform.</div>
+            <div class="feature-icon">📊</div>
+            <div class="feature-title">Track Your Progress</div>
+            <div class="feature-desc">Every session is logged. Watch your metrics move over time and prove to yourself that the work is paying off.</div>
           </div>
           <div class="feature-cell">
             <div class="feature-icon">🏆</div>
-            
+            <div class="feature-title">Earn Your Rank</div>
+            <div class="feature-desc">Five sessions unlocks your certified OSI rank and in-game role suggestion — based entirely on your mechanics, not your in-game rank.</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section style="padding:4rem 1.5rem;text-align:center;">
-      <div style="max-width:600px;margin:0 auto;">
-        <div class="label label-accent" style="margin-bottom:1rem;display:block">Ready?</div>
-        <h2 style="font-family:var(--display);margin-bottom:1rem;">Stop Guessing.<br>Start Knowing.</h2>
-        <p style="color:var(--text-2);margin-bottom:2rem;">One free analysis included. No credit card required.</p>
-        <button class="btn btn-primary btn-lg" onclick="navigate('/register')">Create Free Account</button>
+    <section style="padding:5rem 1.5rem;background:var(--bg-1);border-top:1px solid var(--border)">
+      <div style="max-width:960px;margin:0 auto">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center">
+          <div>
+            <div class="label label-accent" style="margin-bottom:0.75rem;display:block">For Coaches</div>
+            <h2 style="font-family:var(--display);font-size:clamp(1.8rem,4vw,2.5rem);margin-bottom:1.25rem;line-height:1.1">Your Skills.<br>Your Platform.<br>Your Customers.</h2>
+            <p style="color:var(--text-2);line-height:1.8;margin-bottom:1.5rem">MECHgg connects verified coaches with players who already know exactly what they need help with. No cold pitching. Players come to you with data.</p>
+            <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:2rem">
+              <li style="font-size:0.9rem;color:var(--text-2)">⭐ Build reputation through verified player upvotes</li>
+              <li style="font-size:0.9rem;color:var(--text-2)">📋 Profile shows your specialties and supported games</li>
+              <li style="font-size:0.9rem;color:var(--text-2)">💬 Players message you directly through the platform</li>
+              <li style="font-size:0.9rem;color:var(--text-2)">🔒 You set your own rates — payments are between you and the player</li>
+              <li style="font-size:0.9rem;color:var(--text-2)">📈 More upvotes = higher placement in coach listings</li>
+            </ul>
+            <button class="btn btn-primary" onclick="navigate('/register')">Apply to Coach</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="panel" style="border-left:3px solid var(--accent)">
+              <div style="font-family:var(--display);font-size:1.1rem;margin-bottom:0.4rem">Players arrive with data</div>
+              <p style="font-size:0.85rem;color:var(--text-2);line-height:1.6">Every player has an OSI score and full mechanical breakdown before they contact you. No wasted discovery sessions.</p>
+            </div>
+            <div class="panel" style="border-left:3px solid var(--accent)">
+              <div style="font-family:var(--display);font-size:1.1rem;margin-bottom:0.4rem">Reputation that compounds</div>
+              <p style="font-size:0.85rem;color:var(--text-2);line-height:1.6">Pro members upvote coaches after sessions. The more you deliver, the higher you rank in listings.</p>
+            </div>
+            <div class="panel" style="border-left:3px solid var(--accent)">
+              <div style="font-family:var(--display);font-size:1.1rem;margin-bottom:0.4rem">Full control of your business</div>
+              <p style="font-size:0.85rem;color:var(--text-2);line-height:1.6">Set your own rates, schedule, and game specialties. MECHgg is your storefront — not your employer.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding:2rem 1.5rem;background:var(--bg-3);border-top:1px solid var(--border)">
+      <div style="max-width:760px;margin:0 auto;text-align:center">
+        <p style="font-size:0.75rem;color:var(--text-3);line-height:1.7">MECHgg is a gameplay analysis and community platform. We do not employ, endorse, or guarantee any coach listed on this platform. All coaching arrangements, payments, and agreements are made directly between coaches and players. MECHgg accepts no liability for the quality, outcomes, or conduct of any coaching relationship. By using this platform you agree to our Terms of Service.</p>
+      </div>
+    </section>
+
+    <section style="padding:5rem 1.5rem;background:var(--bg-2);border-top:1px solid var(--border)">
+      <div style="max-width:860px;margin:0 auto;text-align:center">
+        <div class="label label-accent" style="margin-bottom:0.75rem;display:block">Simple Pricing</div>
+        <h2 style="font-family:var(--display);font-size:clamp(1.8rem,4vw,2.5rem);margin-bottom:3rem">Start Free. Upgrade When Ready.</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;text-align:left">
+          <div class="panel" style="border:2px solid var(--border);padding:2rem">
+            <div style="font-family:var(--display);font-size:1.3rem;margin-bottom:0.25rem">Free</div>
+            <div style="font-size:2.5rem;font-weight:800;color:var(--border);line-height:1">$0</div>
+            <div style="font-size:0.75rem;color:var(--text-3);margin-bottom:1.5rem">forever</div>
+            <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.75rem">
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ 3 analyses per month</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ OSI score + breakdown</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Habit detection</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Browse coaches</li>
+            </ul>
+            <button class="btn btn-outline btn-full" onclick="navigate('/register')">Start Free</button>
+          </div>
+          <div class="panel" style="border:2px solid var(--accent);padding:2rem;position:relative">
+            <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:0.7rem;font-weight:800;padding:0.25rem 0.75rem;border-radius:99px;white-space:nowrap;letter-spacing:0.1em">MOST POPULAR</div>
+            <div style="font-family:var(--display);font-size:1.3rem;margin-bottom:0.25rem">Pro</div>
+            <div style="font-size:2.5rem;font-weight:800;color:var(--accent);line-height:1">$7</div>
+            <div style="font-size:0.75rem;color:var(--text-3);margin-bottom:1.5rem">per month</div>
+            <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.75rem">
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ 30 analyses per month</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Full drill plans</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Role certification</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Upvote coaches</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Priority support</li>
+            </ul>
+            <button class="btn btn-primary btn-full" onclick="navigate('/register')">Go Pro</button>
+          </div>
+          <div class="panel" style="border:2px solid var(--border);padding:2rem">
+            <div style="font-family:var(--display);font-size:1.3rem;margin-bottom:0.25rem">Coach</div>
+            <div style="font-size:2.5rem;font-weight:800;color:var(--text-3);line-height:1">$29</div>
+            <div style="font-size:0.75rem;color:var(--text-3);margin-bottom:1.5rem">per month</div>
+            <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.75rem">
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Unlimited analyses</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Coach profile listing</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Player upvote system</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Direct messaging</li>
+              <li style="font-size:0.82rem;color:var(--text-2)">✓ Admin-verified badge</li>
+            </ul>
+            <button class="btn btn-outline btn-full" onclick="navigate('/register')">Apply to Coach</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding:6rem 1.5rem;text-align:center;background:var(--bg-1);border-top:1px solid var(--border)">
+      <div style="max-width:600px;margin:0 auto">
+        <h2 style="font-family:var(--display);font-size:clamp(2rem,5vw,3.5rem);margin-bottom:1rem;line-height:1.1">Your Rank Is a Data Problem.<br><span style="color:var(--accent)">We Have the Data.</span></h2>
+        <p style="color:var(--text-2);margin-bottom:2.5rem;font-size:1.05rem;line-height:1.7">Three free analyses a month. No credit card. Upload your first clip and find out exactly where you stand.</p>
+        <button class="btn btn-primary btn-lg" onclick="navigate('/register')" style="font-size:1.05rem;padding:1rem 2.5rem">Get My Free Analysis</button>
       </div>
     </section>
   `);
@@ -485,8 +584,9 @@ async function renderUpload() {
     'Finalizing analysis...',
   ];
 
+  const RANKED_CATS = new Set(['fps','racing','sports','strategy','fighting']);
   const grouped = {};
-  games.forEach(g => {
+  games.filter(g => RANKED_CATS.has(g.category)).forEach(g => {
     const c = g.category || 'fps';
     if (!grouped[c]) grouped[c] = [];
     grouped[c].push(g);
@@ -712,7 +812,20 @@ function handleUrlInput(val) {
     _checkSubmitReady();
     return;
   }
+  const isXbox = /xbox\.com\/play|xboxclips\.com|gameclips\.io/i.test(_uploadUrl);
   const isSupported = /youtube\.com|youtu\.be|twitter\.com|x\.com|twitch\.tv|cdn\.discordapp\.com|media\.discordapp\.net|\.(mp4|mov|avi|webm|mkv)(\?|$)/i.test(_uploadUrl);
+  const urlWarnEl = document.getElementById('url-warn');
+  if (urlWarnEl) {
+    if (isXbox) {
+      urlWarnEl.innerHTML = '⚠️ Xbox share links require Microsoft login and cannot be downloaded. <strong>Save the clip to your device</strong> and upload the file directly, or <strong>share to YouTube/Twitter first</strong> then paste that URL.';
+      urlWarnEl.style.display = 'block';
+    } else if (_uploadUrl && !isSupported) {
+      urlWarnEl.innerHTML = '⚠️ Unsupported URL. Supported: YouTube, Twitter/X, Twitch, Discord CDN, or direct .mp4/.mov links.';
+      urlWarnEl.style.display = 'block';
+    } else {
+      urlWarnEl.style.display = 'none';
+    }
+  }
   if (statusEl) {
     statusEl.style.display = 'block';
     statusEl.innerHTML = isSupported
@@ -869,18 +982,19 @@ async function renderAnalysisResult(parts) {
     const habits  = d.habits  || [];
     const dims    = d.dimension_scores || {};
 
-    const metricLabels = {
-      reaction:'Reaction Speed', accuracy:'Accuracy',
-      eng_eff:'Engagement Eff.', consistency:'Consistency',
-      cqe:'Close Quarters', lre:'Long Range', dpi:'Damage Pressure'
+    const metricLabels = d.metric_labels || {
+      reaction:'Reaction', accuracy:'Accuracy',
+      eng_eff:'Engagement', consistency:'Consistency',
+      cqe:'Close Quarters', lre:'Long Range', dpi:'Pressure'
     };
+    const gameTitle = d.game_name || (d.game||'').replace(/_/g,' ').toUpperCase();
 
     setView(`
       <div class="page fade-in">
         <div class="flex-between" style="margin-bottom:2rem;flex-wrap:wrap;gap:1rem">
           <div>
             <div class="page-eyebrow">Analysis Complete</div>
-            <div class="page-title">${(d.game||'').replace(/_/g,' ').toUpperCase()}</div>
+            <div class="page-title">${gameTitle}</div>
             <div class="label" style="margin-top:0.25rem">${fmtDate(d.analyzed_at)}</div>
           </div>
           <button class="btn btn-ghost" onclick="navigate('/upload')">+ New Analysis</button>
