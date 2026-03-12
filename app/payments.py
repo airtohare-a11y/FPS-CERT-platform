@@ -216,7 +216,8 @@ def get_subscription(
         }
 
     # Lazy expiry check — if period_end has passed, downgrade tier
-    if sub.status == "active" and sub.period_end and sub.period_end < _now():
+    expiry_statuses = ("active", "cancelled", "past_due")
+    if sub.status in expiry_statuses and sub.period_end and sub.period_end < _now():
         sub.status     = "expired"
         current_user.tier = "free"
         _log_payment(
