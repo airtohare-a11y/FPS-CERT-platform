@@ -935,39 +935,71 @@ async function submitUpload() {
     }, 2200);
   }
 
-  try {
-    let result;
-    if (_uploadMode === 'url') {
-      result = await api('POST', '/analysis/upload-url', { url: _uploadUrl, game_id: gameId });
+  // Get real video duration — progress tied to actual clip length
+  const vidEl    = document.getElementById('u-video');
+  const duration = (vidEl && vidEl.duration && isFinite(vidEl.duration) && vidEl.duration > 0) ? vidEl.duration : null;
+  const bar      = document.querySelector('#u-overlay .bar-fill');
+  const pctEl2   = document.getElementById('u-pct');
+  const stageEl  = document.getElementById('u-stage');
+  const allStages = document.querySelectorAll('[id^="pipe-"]');
+  const stageLabels = Array.from(allStages).map(s => s.querySelector('span')?.textContent || '');
+  let apiResult  = null;
+  let apiError   = null;
+  let pct        = 0;
+  let rafId      = null;
+  let stageIdx2  = 0;
+  const startTime = performance.now();
+  if (allStages.length) { allStages[0].classList.add('active'); }
+
+  const apiPromise = (_uploadMode === 'url'
+    ? api('POST', '/analysis/upload-url', { url: _uploadUrl, game_id: gameId })
+    : (() => { const fd = new FormData(); fd.append('clip', _uploadFile); fd.append('game_id', gameId); return api('POST', '/analysis/upload', fd, true); })()
+  ).then(r => { apiResult = r; }).catch(e => { apiError = e; });
+
+  function updateProgress() {
+    const elapsed = (performance.now() - startTime) / 1000;
+    if (apiError) {
+      cancelAnimationFrame(rafId);
+      const ov = document.getElementById('u-overlay'); if (ov) ov.style.display = 'none';
+      document.getElementById('u-submit').disabled  = false;
+      document.getElementById('u-submit').innerHTML = '⌖ Analyze Mechanics';
+      if (dropEl) dropEl.style.pointerEvents = '';
+      allStages.forEach(s => s.classList.remove('active','complete'));
+      errEl.textContent = apiError.message || 'Analysis failed. Please try again.';
+      errEl.style.display = 'block';
+      if (apiError.code === 'QUOTA_EXCEEDED') errEl.innerHTML = `Limit reached. <button class="footer-link" onclick="navigate('/pricing')">Upgrade to Pro</button> for unlimited analyses.`;
+      return;
+    }
+    let targetPct;
+    if (duration) {
+      targetPct = Math.min((elapsed / duration) * 100, 97);
+      if (apiResult && elapsed >= duration) targetPct = 100;
     } else {
-      const fd = new FormData();
-      fd.append('clip',    _uploadFile);
-      fd.append('game_id', gameId);
-      result = await api('POST', '/analysis/upload', fd, true);
+      targetPct = apiResult ? 100 : Math.min((elapsed / 60) * 97, 97);
     }
-
-    clearInterval(stageTimer);
-    document.querySelectorAll('[id^="pipe-"]').forEach(s => { s.classList.remove('active'); s.classList.add('complete'); });
-    const bar = document.querySelector('#u-overlay .bar-fill');
-    if (bar) bar.style.width = '100%';
-    const pctEl = document.getElementById('u-pct');
-    if (pctEl) pctEl.textContent = '100%';
-    setTimeout(() => navigate(`/analysis/${result.id}`), 600);
-
-  } catch(e) {
-    clearInterval(stageTimer);
-    const overlay = document.getElementById('u-overlay');
-    if (overlay) overlay.style.display = 'none';
-    document.getElementById('u-submit').disabled  = false;
-    document.getElementById('u-submit').innerHTML = '⌖ Analyze Mechanics';
-    if (dropEl) dropEl.style.pointerEvents = '';
-    document.querySelectorAll('[id^="pipe-"]').forEach(s => s.classList.remove('active','complete'));
-    errEl.textContent = e.message || 'Analysis failed. Please try again.';
-    errEl.style.display = 'block';
-    if (e.code === 'QUOTA_EXCEEDED') {
-      errEl.innerHTML = `Limit reached. <button class="footer-link" onclick="navigate('/pricing')">Upgrade to Pro</button> for unlimited analyses.`;
+    pct += (targetPct - pct) * 0.05;
+    if (bar) bar.style.width = Math.round(pct) + '%';
+    if (pctEl2) pctEl2.textContent = Math.round(pct) + '%';
+    const newIdx = Math.min(Math.floor((pct / 100) * allStages.length), allStages.length - 1);
+    if (newIdx > stageIdx2) {
+      allStages[stageIdx2].classList.remove('active'); allStages[stageIdx2].classList.add('complete');
+      stageIdx2 = newIdx; allStages[stageIdx2].classList.add('active');
+      if (stageEl && stageLabels[stageIdx2]) stageEl.textContent = stageLabels[stageIdx2];
     }
+    if (pct >= 99.5 && apiResult) {
+      cancelAnimationFrame(rafId);
+      allStages.forEach(s => { s.classList.remove('active'); s.classList.add('complete'); });
+      if (bar) bar.style.width = '100%';
+      if (pctEl2) pctEl2.textContent = '100%';
+      if (stageEl) stageEl.textContent = 'Analysis complete';
+      setTimeout(() => navigate('/analysis/' + apiResult.id), 500);
+      return;
+    }
+    rafId = requestAnimationFrame(updateProgress);
   }
+  rafId = requestAnimationFrame(updateProgress);
+  try { await apiPromise; } catch(e) {}
+}
 }
 
 // ── Analysis Result ──────────────────────────────────────────────

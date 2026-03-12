@@ -621,6 +621,7 @@ async def upload_clip(
             m_lre        = m_lre,
             m_dpi        = m_dpi,
             osi_session  = osi,
+            file_hash    = _file_hash,
         )
         db.add(session)
 
@@ -821,6 +822,7 @@ async def upload_clip_from_url(
             map_slug      = req.game_id,
             game_mode     = result.get("gameCategory", "fps"),
             osi_session   = osi,
+            file_hash     = _file_hash,
             is_ranked     = True,
             season        = season,
             submitted_at  = now,

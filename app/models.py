@@ -182,6 +182,7 @@ class DerivedSession(Base):
     m_dpi         = Column(Float, nullable=True)   # Damage Pressure    (15%)
 
     # Per-session OSI (0–1000). Computed once at upload, stored permanently.
+    file_hash     = Column(String(64), nullable=True, index=True)
     osi_session   = Column(Float, nullable=True)
     analysis_json = Column(Text, nullable=True)
 
