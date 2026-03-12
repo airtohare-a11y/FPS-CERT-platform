@@ -552,6 +552,7 @@ async def upload_clip(
         _check_duplicate(db, user.id, _file_hash)
 
         # ── Run analysis ──────────────────────────────────────────────
+        result = analyze_clip(tmp_path, game_id)
 
         # ── Compute OSI and percentile ─────────────────────────────────────
         osi        = _compute_osi(result["mechanicalIndex"])
