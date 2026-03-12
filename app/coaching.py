@@ -22,7 +22,7 @@ from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import Session, relationship
 
 from app.auth import get_current_user
@@ -59,6 +59,22 @@ class PlayerRank(Base):
 
     user = relationship("User", foreign_keys=[user_id])
 
+
+
+class PlayerCategoryRank(Base):
+    __tablename__ = "player_category_ranks"
+    id            = Column(Integer, primary_key=True, autoincrement=True)
+    user_id       = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    category      = Column(String(20), nullable=False)
+    rank_label    = Column(String(20), nullable=False, default="Unranked")
+    rank_tier     = Column(Integer,    nullable=False, default=0)
+    avg_osi       = Column(Float,      nullable=True)
+    consistency   = Column(Float,      nullable=True)
+    total_sessions= Column(Integer,    nullable=False, default=0)
+    suggested_role= Column(String(40), nullable=True)
+    last_updated  = Column(Integer,    nullable=False, default=_now)
+    __table_args__ = (UniqueConstraint("user_id", "category", name="uq_user_category_rank"),)
+    user = relationship("User", foreign_keys=[user_id])
 
 class CoachProfile(Base):
     """
@@ -791,6 +807,67 @@ def _get_drills_for_habits(habits: list) -> list:
 # =============================================================================
 # Rank Routes
 # =============================================================================
+
+
+CATEGORY_LABELS = {
+    "fps":      "FPS / Shooter",
+    "racing":   "Racing",
+    "sports":   "Sports",
+    "strategy": "Strategy / MOBA",
+    "fighting": "Fighting",
+}
+
+def _compute_category_ranks(user_id, sessions, db):
+    from collections import defaultdict
+    from app.models import GAME_REGISTRY
+    cat_sessions = defaultdict(list)
+    for s in sessions:
+        game_info = GAME_REGISTRY.get(s.map_slug, {})
+        cat = game_info.get("category", s.game_mode or "fps")
+        if cat in CATEGORY_LABELS:
+            cat_sessions[cat].append(s)
+    results = []
+    for cat, cat_s in cat_sessions.items():
+        osis = [s.osi_session for s in cat_s if s.osi_session]
+        if not osis:
+            continue
+        avg_osi     = round(sum(osis) / len(osis), 1)
+        consistency = _compute_consistency(osis)
+        total       = len(cat_s)
+        rank        = _assign_rank(avg_osi, consistency, total)
+        is_ranked   = total >= MIN_SESSIONS_FOR_RANK
+        role        = _suggest_role(cat_s) if total >= 5 else None
+        cat_rank = db.query(PlayerCategoryRank).filter(
+            PlayerCategoryRank.user_id == user_id,
+            PlayerCategoryRank.category == cat
+        ).first()
+        if not cat_rank:
+            cat_rank = PlayerCategoryRank(user_id=user_id, category=cat)
+            db.add(cat_rank)
+        cat_rank.rank_label     = rank["label"] if is_ranked else "Unranked"
+        cat_rank.rank_tier      = rank["tier"] if is_ranked else 0
+        cat_rank.avg_osi        = avg_osi
+        cat_rank.consistency    = consistency
+        cat_rank.total_sessions = total
+        cat_rank.suggested_role = role["role_key"] if role else None
+        cat_rank.last_updated   = _now()
+        results.append({
+            "category":        cat,
+            "category_label":  CATEGORY_LABELS[cat],
+            "rank":            rank["label"] if is_ranked else "Unranked",
+            "tier":            rank["tier"] if is_ranked else 0,
+            "color":           rank["color"] if is_ranked else "#6b7280",
+            "avg_osi":         avg_osi,
+            "consistency":     consistency,
+            "total_sessions":  total,
+            "sessions_needed": max(0, MIN_SESSIONS_FOR_RANK - total),
+            "is_ranked":       is_ranked,
+            "progress":        min(100, int((total / MIN_SESSIONS_FOR_RANK) * 100)),
+            "suggested_role":  role,
+        })
+    db.commit()
+    results.sort(key=lambda x: x["tier"], reverse=True)
+    return results
 
 @router.get("/rank/me", summary="Get current player rank and role suggestion")
 def get_my_rank(
