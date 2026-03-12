@@ -440,6 +440,78 @@ def _check_role_unlocks(osi: float, percentile: float, user: User, db: Session) 
 
 # ── Main analysis function ────────────────────────────────────────────────────
 
+
+# =============================================================================
+# Content Moderation — AWS Rekognition (activate by setting AWS keys in Secrets)
+# =============================================================================
+def _moderate_frame(video_path: str) -> dict:
+    """
+    Extract one frame and check for explicit content via AWS Rekognition.
+    
+    To activate:
+      1. Add to Replit Secrets:
+           AWS_ACCESS_KEY_ID
+           AWS_SECRET_ACCESS_KEY  
+           AWS_REGION (e.g. us-east-1)
+      2. pip install boto3
+    
+    Returns:
+      {"safe": True}  — content is clean
+      {"safe": False, "reason": "..."}  — content blocked
+    """
+    import os
+    aws_key = os.getenv("AWS_ACCESS_KEY_ID", "")
+    aws_secret = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+
+    # ── Not activated yet — pass all content through ──────────────────────
+    if not aws_key or not aws_secret:
+        return {"safe": True, "status": "moderation_inactive"}
+
+    # ── Extract single frame with ffmpeg ──────────────────────────────────
+    import subprocess, tempfile
+    frame_path = tempfile.mktemp(suffix='.jpg')
+    try:
+        subprocess.run([
+            'ffmpeg', '-i', video_path,
+            '-ss', '00:00:03',       # grab frame at 3 seconds
+            '-vframes', '1',
+            '-q:v', '2',
+            frame_path,
+            '-y', '-loglevel', 'quiet'
+        ], timeout=15, check=True)
+    except Exception:
+        # ffmpeg failed — fail open (allow upload, log warning)
+        return {"safe": True, "status": "frame_extraction_failed"}
+
+    # ── Send to AWS Rekognition ───────────────────────────────────────────
+    try:
+        import boto3
+        client = boto3.client(
+            'rekognition',
+            aws_access_key_id=aws_key,
+            aws_secret_access_key=aws_secret,
+            region_name=os.getenv("AWS_REGION", "us-east-1")
+        )
+        with open(frame_path, 'rb') as img:
+            response = client.detect_moderation_labels(
+                Image={'Bytes': img.read()},
+                MinConfidence=75
+            )
+        labels = [l['Name'] for l in response.get('ModerationLabels', [])]
+        blocked = [l for l in labels if any(x in l for x in [
+            'Explicit', 'Nudity', 'Graphic', 'Violence', 'Adult'
+        ])]
+        if blocked:
+            return {"safe": False, "reason": f"Content policy violation detected: {', '.join(blocked)}"}
+        return {"safe": True, "status": "clean"}
+    except Exception as e:
+        # Rekognition error — fail open, log
+        return {"safe": True, "status": f"moderation_error: {str(e)}"}
+    finally:
+        try: os.remove(frame_path)
+        except: pass
+
+
 def analyze_clip(video_path: str, game_id: str) -> dict:
     """
     Analyze a gameplay video clip and return mechanical metrics.
@@ -550,6 +622,12 @@ async def upload_clip(
         # ── Duplicate check ──
         _file_hash = _hash_file(tmp_path)
         _check_duplicate(db, user.id, _file_hash)
+
+        # ── Content moderation ────────────────────────────────────────
+        _mod = _moderate_frame(tmp_path)
+        if not _mod["safe"]:
+            os.unlink(tmp_path)
+            raise HTTPException(status_code=451, detail=_mod["reason"])
 
         # ── Run analysis ──────────────────────────────────────────────
         result = analyze_clip(tmp_path, game_id)
